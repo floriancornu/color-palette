@@ -1,0 +1,220 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<title>color gradient picker</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:700">
+	<link rel="stylesheet" href="http://necolas.github.io/normalize.css/8.0.0/normalize.css">
+
+	<style>
+		.oneColor {
+			width: 80px;
+			display: block;
+			padding: 6px;
+			height: 50px;
+			font-size: 0.8em;
+			text-align: center;
+		}
+		#output{
+			display: block;
+		}
+		.oneMode{
+			display: inline-block;
+		}
+
+	</style>
+
+
+</head>
+
+<body>
+	<!--[if lte IE 9]>
+			<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+		<![endif]-->
+
+	<div class="container">
+		<h1>Color Gradient</h1>
+	</div>
+
+	<div class="container">
+		<!-- <div class="row">
+			<h3>Pick base colors in Lch:</h3>
+		</div>
+
+		<div class="row">
+			<div>
+				<table>
+					<tr>
+						<td>
+							<b>From:</b> L:<span class="color-l0"></span>, c:<span class="color-c0"></span>, h:<span class="color-h0"></span>
+							<br/>L: <input id="l0" value="111" type="range" min="0" max="140" />
+							<br/>c: <input id="c0" value="35" type="range" min="0" max="100" />
+							<br/>h: <input id="h0" value="58" type="range" min="0" max="360" />
+						</td>
+						<td>&nbsp;&nbsp;&nbsp;</td>
+						<td>
+							<b>To:</b> L:<span class="color-l1"></span>, c:<span class="color-c1"></span>, h:<span class="color-h1"></span>
+							<br/>L: <input id="l1" value="40" type="range" min="0" max="140" />
+							<br/>c: <input id="c1" value="64" type="range" min="0" max="100" />
+							<br/>h: <input id="h1" value="223" type="range" min="0" max="360" />
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div> -->
+
+		<div class="row">
+			<h3>Pick base colors in RGB:</h3>
+		</div>
+
+		<div class="row">
+			<div>
+				<input id="colorRGB0" class='rgbPicker' type="text" value="FFFFFF" style="width:6em" />
+				<input id="colorRGB1" class='rgbPicker' type="text" value="000000" style="width:6em" />
+			</div>
+		</div>
+
+		<div class="row">
+			<h3># of colors:</h3>
+			<input id="numberColors" type="number" value="12" style="width:3em" />
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<h3>Color palettes in different interpolations:</h3>
+		</div>
+
+		<div class="row">
+			<div id="output"></div>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<p>Inspired by Rob Simmon (<a href="https://twitter.com/rsimmon" target="_blank">Twitter</a>, <a href="https://medium.com/@robsimmon" target="_blank">Medium</a>): <a href="https://earthobservatory.nasa.gov/blogs/elegantfigures/2013/08/05/subtleties-of-color-part-1-of-6" target="_blank">Subtleties of Color</a> from which I found <a href="http://jsfiddle.net/d6wXV/6/embedded/result" target="_blank">http://jsfiddle.net/d6wXV/6/embedded/result</a> ... which I saw working on April 27th 2018, but found broken on April 30th :( </p>
+		</div>
+	</div>
+
+
+
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.7/chroma.min.js"></script>
+
+
+
+	<script type="text/javascript">
+		var app = {
+			baseColors: [],
+			numberColors: null
+		};
+
+		function updatePalette(){
+			// Clean the output
+			$('#output').html('');
+
+			var chromaScale = chroma.scale( [ app.baseColors[0],app.baseColors[1] ] );
+
+			['lab', 'lch', 'rgb', 'hsv', 'hsl'].forEach(function(colorMode) {
+				console.log('Color mode: ' + colorMode + ' for  ' + app.numberColors + ' colors');
+
+				var palette = '<div class="oneMode"><h4>' + colorMode + '</h4>';
+
+				// Generate the interpolation mode area
+				var modeColors = chromaScale.mode(colorMode).colors(app.numberColors);
+				modeColors.forEach(function(color) {
+					console.log('%c   ', 'background: ' + color, color);
+					palette = palette + '<span class="oneColor" style="background:' + color + '">' + color + '</span>';
+				});
+				palette = palette + '</div>';
+				$(palette).appendTo('#output');
+			});
+		}
+
+		function updateBaseColorsInLCH() {
+			console.log('updateBaseColorsInLCH');
+
+			function baseColor(i) {
+				var l = Number($('#l' + i).val());
+				var c = Number($('#c' + i).val());
+				var h = Number($('#h' + i).val());
+				// console.log( l,c,h);
+				$('.color-l' + i).text(l);
+				$('.color-c' + i).text(c);
+				$('.color-h' + i).text(h);
+
+				var lchColor = chroma.lch(l, c, h);
+				// console.log('lchColor:' + lchColor);
+				var rgbColor = lchColor.rgb();
+
+				console.log('%c   ', 'background: ' + lchColor, lchColor + ' - rgb:' + rgbColor);
+				return chroma.lch(l, c, h);
+			}
+			app.baseColors = [];
+			app.baseColors.push( baseColor(0) );
+			app.baseColors.push( baseColor(1) );
+
+			if( app.numberColors ){
+				updatePalette();
+			}
+		}
+
+		function updateBaseColorsInRGB() {
+			console.log('updateBaseColorsInRGB');
+
+			function baseColor(i) {
+				console.log( 'baseColor: '+ i);
+				var rgb = $('#colorRGB' + i).val();
+				console.log('rgbColor:' + rgb);
+				var rgbColor = chroma( rgb );
+				console.log('rgbColor:' + rgbColor);
+				return rgbColor;
+			}
+
+			app.baseColors = [];
+			app.baseColors.push( baseColor(0) );
+			app.baseColors.push( baseColor(1) );
+			if( app.numberColors ){
+				updatePalette();
+			}
+		}
+
+		function updateNumberColors(){
+			app.numberColors = $('#numberColors').val();
+			if( app.baseColors.length === 2 ){
+				updatePalette();
+			}
+		}
+
+		// Update the palette on change
+		$('#numberColors').change(updateNumberColors);
+		$('select').change(updateBaseColorsInLCH);
+		// $('.rgbPicker').change(updateBaseColorsInRGB);
+
+		// Init
+		updateNumberColors();
+		updateBaseColorsInLCH();
+		updateBaseColorsInRGB();
+
+
+		// Suggest Google Chrome browser
+		if (!(function() {
+				var i = document.createElement("input");
+				i.setAttribute('type', 'range');
+				return i.type !== 'text';
+			})()) {
+			$('<p/>').appendTo('body').text('Hint: open this page in Chrome browser to enjoy the awesomeness of the HTML5 range input slider...');
+		}
+	</script>
+
+</body>
+
+</html>
