@@ -142,7 +142,9 @@
 				var blendedColor = chroma.blend( baseColor, colorToBlend, blendMode );
 				console.log('%c   ', 'background: ' + blendedColor, 'blendedColor: ' + blendedColor);
 
-				palette = palette + '<span class="oneColor" style="background:' + blendedColor + '">' + blendedColor + '</span>';
+				var blendedColorRGB = blendedColor.rgb();
+
+				palette = palette + '<span class="oneColor" style="background:' + blendedColor + '">' + blendedColor + '<br /><span class="small">' + blendedColorRGB + '</span></span>';
 			}
 			palette = palette + '</div>';
 			$(palette).appendTo('#output');
@@ -175,7 +177,10 @@
 				var modeColors = chromaScale.mode(colorMode).colors(app.numberColors);
 				modeColors.forEach(function(color) {
 					console.log('%c   ', 'background: ' + color, color);
-					palette = palette + '<span class="oneColor" style="background:' + color + '">' + color + '</span>';
+
+					var colorRGB = chroma( color ).rgb();
+
+					palette = palette + '<span class="oneColor" style="background:' + color + '">' + color + '<br /><span class="small">' + colorRGB + '</span></span>';
 				});
 				palette = palette + '</div>';
 				$(palette).appendTo('#output');
