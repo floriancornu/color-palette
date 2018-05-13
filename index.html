@@ -19,6 +19,7 @@
 			height: 50px;
 			font-size: 0.8em;
 			text-align: center;
+			border-right: 2px solid white;
 		}
 		.oneMode h4{
 			font-size: small;
@@ -121,25 +122,44 @@
 			numberColors: null
 		};
 
-		function generateOneBlendPalette( blendMode ){
+		function generateOneBlendPalette( blendMode, baseColorAdjustement ){
 			console.log( 'generateOneBlendPalette: ' + blendMode );
 			var palette = '<div class="oneMode"><h4>' + blendMode + '</h4>';
 			var baseColor = app.baseColors[0];
+			var blendColor = app.baseColors[1];
 
 			// Generate different Opacity of white:
 			var numberBlends = app.numberColors;
 			var steps = 1/ (numberBlends-1);
 			for( var blendId = 0; blendId < numberBlends; blendId ++ ){
+				var stepValue = 1 - ( blendId * steps )
+				console.log( blendId, ' / ', numberBlends, 'steps:'+steps, stepValue )
 
 				// alpha not changing white
-				// var colorToBlend = chroma( 'white' ).alpha( 1 - ( blendId * steps ) );
+				// var colorToBlend = chroma( 'white' ).alpha( stepValue );
 				// console.log('%c   ', 'background: ' + colorToBlend, blendId + 'colorToBlend: ' + colorToBlend + ' colorToBlend:' + colorToBlend.rgba() );
+				var colorToBlend
+				var baseColorChroma
+				if( stepValue === 1 ){ // bug in Chroma on luminance(1)
+					colorToBlend = chroma( 'white' );
+				}else{
+					colorToBlend = chroma( blendColor ).luminance( stepValue );
+				}
 
-				var colorToBlend = chroma( 'white' ).luminance( 1 - ( blendId * steps ) );
+				if( baseColorAdjustement ){
+					if( stepValue === 1 ){
+						baseColorChroma = chroma( 'white' );
+					}else{
+						baseColorChroma = chroma( baseColor ).luminance( stepValue );
+					}
+				}else{
+					baseColorChroma = chroma( baseColor );
+				}
+
 				// console.log('%c   ', 'background: ' + colorToBlend, blendId + 'colorToBlend: ' + colorToBlend + ' colorToBlend:' + colorToBlend.rgba() );
 
 				//Blend colors:
-				var blendedColor = chroma.blend( baseColor, colorToBlend, blendMode );
+				var blendedColor = chroma.blend( baseColorChroma, colorToBlend, blendMode );
 				console.log('%c   ', 'background: ' + blendedColor, 'blendedColor: ' + blendedColor);
 
 				var blendedColorRGB = blendedColor.rgb();
@@ -158,6 +178,7 @@
 
 			blendModes.forEach( function( blendMode ){
 				generateOneBlendPalette( blendMode );
+				generateOneBlendPalette( blendMode, true );
 			} )
 		}
 
