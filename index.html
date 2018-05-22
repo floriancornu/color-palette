@@ -33,6 +33,8 @@
 
 	</style>
 
+	<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.10/lodash.min.js"></script>
+
 
 </head>
 
@@ -85,7 +87,7 @@
 
 		<div class="row">
 			<h3># of colors:</h3>
-			<input id="numberColors" type="number" value="12" style="width:3em" />
+			<input id="numberColors" type="number" value="20" style="width:3em" />
 		</div>
 	</div>
 
@@ -164,7 +166,7 @@
 
 				var blendedColorRGB = blendedColor.rgb();
 
-				palette = palette + '<span class="oneColor" style="background:' + blendedColor + '">' + blendedColor + '<br /><span class="small">' + blendedColorRGB + '</span></span>';
+				palette = palette + generateColorDiv( blendedColor.hex(), blendedColorRGB )
 			}
 			palette = palette + '</div>';
 			$(palette).appendTo('#output');
@@ -182,8 +184,17 @@
 			} )
 		}
 
+		var colorPalette = []
+		function generateColorDiv( colorHEX, colorRGB ){
+			colorPalette.push( colorHEX )
+			return '<span class="oneColor" style="background:' + colorHEX + '" data-hex="' + colorHEX + '">' + colorHEX + '<br /><span class="small">' + colorRGB + '</span></span>'
+		}
+
 
 		function updatePalette(){
+			// Clean the colors
+			colorPalette = []
+
 			// Clean the output
 			$('#output').html('');
 
@@ -201,13 +212,15 @@
 
 					var colorRGB = chroma( color ).rgb();
 
-					palette = palette + '<span class="oneColor" style="background:' + color + '">' + color + '<br /><span class="small">' + colorRGB + '</span></span>';
+					palette = palette + generateColorDiv( color, colorRGB )
 				});
 				palette = palette + '</div>';
 				$(palette).appendTo('#output');
 			});
 
-			generatePalettesFromBlending();
+			generatePalettesFromBlending()
+
+			colorPalette = _.uniq( colorPalette )
 		}
 
 		function updateBaseColorsInLCH() {
@@ -267,13 +280,93 @@
 
 		// Update the palette on change
 		$('#numberColors').change(updateNumberColors);
-		$('select').change(updateBaseColorsInLCH);
+		// $('select').change(updateBaseColorsInLCH);
 		$('.rgbPicker').change(updateBaseColorsInRGB);
 
 		// Init
 		updateNumberColors();
 		// updateBaseColorsInLCH();
 		updateBaseColorsInRGB();
+
+
+		// Measure ratios between colors
+		var clickedColors = []
+		$( '.oneColor' ).on( 'click', function(){
+			console.log( $( this ).attr( 'data-hex' ) )
+			var clickedHEX = $( this ).attr( 'data-hex' )
+			clickedColors.push( clickedHEX )
+
+			// Generate palette of good colors
+			findColors()
+
+			// Remove previous value if more than 2
+			if( clickedColors.length >= 3 ) clickedColors.shift()
+
+			if( clickedColors.length === 2 ){
+				if( clickedColors[0] === clickedColors[1] ){
+					console.log( '%c same color '+ clickedColors[0], 'background:' + clickedColors[0] )
+					return
+				}
+
+				console.log( '--- analyse 2 colors' )
+				// Analyse the 2 colors:
+				console.log( '%c'+clickedColors[0], 'background:'+clickedColors[0] )
+				console.log( '%c'+clickedColors[1], 'background:'+clickedColors[1] )
+				console.log( '%cText on Background', 'background:'+clickedColors[0]+'; color:' + clickedColors[1] )
+				console.log( '%cText on Background', 'background:'+clickedColors[1]+'; color:' + clickedColors[0] )
+
+				var contrast = chroma.contrast( clickedColors[0], clickedColors[1] )
+				console.log( 'contrast   ', +contrast.toFixed(2), '>4.5?', (contrast>4.5) )
+
+				var distanceLab = chroma.distance( clickedColors[0], clickedColors[1] )
+				console.log( 'distanceLab', +distanceLab.toFixed(2) )
+
+				var distanceRGB = chroma.distance( clickedColors[0], clickedColors[1], 'rgb' )
+				console.log( 'distanceRGB', +distanceRGB.toFixed(2) )
+
+				var deltaE = chroma.deltaE( clickedColors[0], clickedColors[1] )
+				console.log( 'deltaE     ', +deltaE.toFixed(2) )
+			}
+		} )
+
+		function findColors(){
+			var consideredColor = clickedColors[ clickedColors.length -1 ]
+			var matchingColors = [ { color: consideredColor, contrast: 1 } ]
+
+			console.log( '--- findColors for %c ' + consideredColor, 'background:' + consideredColor )
+
+
+			var minDistance = 1.15
+			var minMixDistance = 1.06
+
+			colorPalette.forEach( function( potentialColor ){
+				if( consideredColor === potentialColor ) return
+				if( potentialColor === '#ffffff' ) return
+
+				var isColorToInclude = false
+				var contrast = chroma.contrast( potentialColor, consideredColor )
+				if( contrast >= minDistance ){
+					isColorToInclude = true
+					if( potentialColor === '#00c01b' ) console.log( '%c from palette::' + potentialColor, 'background:' + potentialColor )
+					matchingColors.forEach( function( matchingColor ){
+						var matchingHEX = matchingColor.color
+						var contrast2 = chroma.contrast( potentialColor, matchingHEX )
+						if( potentialColor === '#00c01b' )  console.log( '%c ::' + matchingHEX, 'background:' + matchingHEX, contrast2 )
+						if( contrast2 < minMixDistance ) isColorToInclude = false
+					} )
+				}
+				if( isColorToInclude ) matchingColors.push( { color: potentialColor, contrast: contrast } )
+			} )
+
+			console.log( matchingColors.length + ' matching colors' )
+
+			// Sort for nice gradient
+			matchingColors = _.orderBy( matchingColors, [ 'contrast' ] )
+
+			matchingColors.forEach( function( matchingColor ){
+				console.log( '%c'+matchingColor.color, 'background:'+matchingColor.color )
+			} )
+		}
 
 
 		// Suggest Google Chrome browser
