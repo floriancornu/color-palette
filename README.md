@@ -10,6 +10,8 @@ The article led us to a [JSfiddle of palette generation](http://jsfiddle.net/d6w
 
 The color calculations are based on [ChromaJS](http://gka.github.io/chroma.js)
 
+D3 [Scale Chromatic](https://github.com/d3/d3-scale-chromatic/blob/master/README.md)
+
 # Roadmap
 - Split code html, JS and CSS
 - Clean UI to make the page presentable
